@@ -1,75 +1,349 @@
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ইনভয়েস সিস্টেম</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body onload="updateDateTime(); generateInvoiceNumber();">
-    <div class="header">
-        <h2>ইমরান ইলেকট্রনিক্স অ্যান্ড মোবাইল সার্ভিসিং সেন্টার</h2>
-        <p>📍 গদখালি বাজার বাস স্ট্যান্ড, রহিম সরদার মার্কেট, ঝিকরগাছা, যশোর।</p>
-        <p>📧 mdemranst0@gmail.com | 📞 01952325903</p>
-        <p>📅 <span id="currentDate"></span> | ⏰ <span id="currentTime"></span></p>
-    </div>
+<!DOCTYPE html>  <html>    <head>      <title>Premium Expense App</title>      
+<meta name="viewport" content="width=device-width, initial-scale=1">      
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">      
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>      
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>  <style>      
+body{      
+font-family:'Poppins',sans-serif;      
+background:linear-gradient(135deg,#43cea2,#185a9d);      
+padding:15px;      
+color:#333;      
+transition:0.3s;      
+}      
+.dark{background:#121212;color:#eee;}      
+h1{text-align:center;color:white;}      
+.card{      
+background:white;      
+padding:20px;      
+border-radius:20px;      
+box-shadow:0 10px 25px rgba(0,0,0,0.2);      
+margin-bottom:20px;      
+}      
+.dark .card{background:#1e1e1e;}      
+.balanceBox{display:flex;justify-content:space-between;font-weight:600;font-size:18px;margin-top:5px;}      
+#balance{font-size:22px;font-weight:bold;}      
+input, select{      
+width:100%;padding:12px;margin:8px 0;border-radius:12px;border:none;      
+background:#f1f1f1;font-size:16px;      
+}      
+.dark input,.dark select{background:#2c2c2c;color:white;}      
+.buttons{display:flex;justify-content:space-between;}      
+button{      
+width:48%;padding:12px;border:none;border-radius:15px;      
+font-size:16px;font-weight:600;color:white;cursor:pointer;      
+}      
+.incomeBtn{background:linear-gradient(45deg,#11998e,#38ef7d);}      
+.expenseBtn{background:linear-gradient(45deg,#ff416c,#ff4b2b);}      
+.item{      
+display:flex;justify-content:space-between;align-items:center;      
+background:#f9f9f9;padding:12px;margin-top:10px;border-radius:12px;      
+}      
+.dark .item{background:#2a2a2a;}      
+.green{color:#11998e;}      
+.red{color:#ff416c;}      
+.smallDate{font-size:12px;opacity:0.6;margin-top:3px;}      
+.actionBtns button{      
+width:24px;height:24px;margin-left:5px;      
+border-radius:50%;font-size:12px;padding:0;      
+}      
+.deleteBtn{background:#ff4b2b;}      
+.editBtn{background:#11998e;}      
+.resetBtn{      
+width:100%;padding:14px;margin-top:15px;border:none;border-radius:15px;      
+font-size:16px;font-weight:600;color:white;      
+background:linear-gradient(45deg,#ff416c,#ff4b2b);cursor:pointer;      
+}      
+.searchInput{margin-top:10px;}      
+.lockScreen{      
+position:fixed;top:0;left:0;width:100%;height:100%;      
+background:#000000dd;display:flex;justify-content:center;align-items:center;      
+flex-direction:column;z-index:999;      
+}      
+.lockBox{      
+background:white;padding:30px;border-radius:20px;      
+width:90%;max-width:300px;text-align:center;      
+}      
+.darkToggle{width:100%;margin-top:10px;background:#333;}      
+canvas{margin-top:15px;}      
+.pdfBtn{      
+width:100%;      
+margin-top:10px;      
+background:#11998e;      
+color:white;      
+padding:12px;      
+border:none;      
+border-radius:12px;      
+}      
+</style>  </head>  <body>  <div id="lockScreen" class="lockScreen" style="display:none;">      
+<div class="lockBox">      
+<h3>🔐 পাসওয়ার্ড</h3>      
+<input type="password" id="lockPass" placeholder="পাসওয়ার্ড লিখুন">      
+<button onclick="checkPassword()" style="margin-top:15px;width:100%;background:#11998e;">Unlock</button>      
+</div>      
+</div>  <h1>💎 স্মার্ট আয়  ব্যয়</h1>  <div class="card">      
+<div class="balanceBox">      
+<span>বর্তমান ব্যালেন্স</span>      
+<span id="balance">0 টাকা</span>      
+</div>  <div class="balanceBox">      
+<span style="color:#11998e;">💰 মোট আয়</span>      
+<span id="totalIncome" style="color:#11998e;">0 টাকা</span>      
+</div>  <div class="balanceBox">      
+<span style="color:#ff416c;">🛒 মোট খরচ</span>      
+<span id="totalExpense" style="color:#ff416c;">0 টাকা</span>      
+</div>  <button class="darkToggle" onclick="toggleDarkMode()">🌙 ডার্ক মোড</button>  </div>  <div class="card">      
+<input type="text" id="desc" placeholder="বিবরণ">      
+<input type="number" id="amount" placeholder="টাকার পরিমাণ">  <select id="category" onchange="checkOtherCategory()">      
+<option value="খাবার">খাবার</option>      
+<option value="ভাড়া">ভাড়া</option>      
+<option value="ব্যবসা">ব্যবসা</option>      
+<option value="বাজার">বাজার</option>      
+<option value="চিকিৎসা">চিকিৎসা</option>      
+<option value="অন্যান্য">অন্যান্য</option>      
+</select>  <input type="text" id="otherCategory" placeholder="ক্যাটাগরি লিখুন" style="display:none;">  <div class="buttons">      
+<button class="incomeBtn" onclick="addTransaction('income')">➕ আয়</button>      
+<button class="expenseBtn" onclick="addTransaction('expense')">➖ খরচ</button>      
+</div>      
+</div>  <div class="card">      
+<h3>📋 হিসাব তালিকা</h3>      
+<input type="text" id="search" class="searchInput" placeholder="🔍 সার্চ করুন..." onkeyup="updateUI()">      
+<div id="list"></div>      
+<button class="resetBtn" onclick="resetAll()">🗑 সব হিসাব মুছে ফেলুন</button>  <hr style="margin:15px 0;">      
+<h3>📊 আয় বনাম খরচ গ্রাফ</h3>      
+<canvas id="expenseChart"></canvas>  <hr style="margin:15px 0;">      
+<h3>📅 মাসিক রিপোর্ট</h3>      
+<select id="monthFilter" onchange="updateUI()" style="margin-bottom:10px;">      
+<option value="all">সব মাস</option>      
+</select>  <div class="balanceBox">      
+<span style="color:#11998e;">মাসিক আয়</span>      
+<span id="monthlyIncome" style="color:#11998e;">0 টাকা</span>      
+</div>  <div class="balanceBox">      
+<span style="color:#ff416c;">মাসিক খরচ</span>      
+<span id="monthlyExpense" style="color:#ff416c;">0 টাকা</span>      
+</div>  <div class="balanceBox">      
+<span>মাসিক ব্যালেন্স</span>      
+<span id="monthlyBalance">0 টাকা</span>      
+</div>  <button class="pdfBtn" onclick="downloadPDF()">📥 PDF ডাউনলোড</button>  </div>  <script>      
+const STORAGE_KEY="my_expense_app_v2";      
+const PASS_KEY="app_password";      
+const SESSION_KEY="app_unlocked";    let transactions=JSON.parse(localStorage.getItem(STORAGE_KEY))||[];  
+let myChart=null;  function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify(transactions));}
+function formatMoney(n){return n.toLocaleString("bn-BD");}
+function getCurrentDate(){return new Date().toISOString();}
 
-    <div class="container">
-        <h2>ইনভয়েস তৈরি করুন</h2>
+function checkOtherCategory(){
+let cat=document.getElementById("category").value;
+let other=document.getElementById("otherCategory");
+other.style.display = (cat==="অন্যান্য") ? "block" : "none";
+}
 
-        <label for="invoiceNumber">ইনভয়েস নাম্বার:</label>
-        <input type="text" id="invoiceNumber" readonly><br><br>
+function addTransaction(type){
+let desc=document.getElementById("desc").value.trim();
+let amount=Number(document.getElementById("amount").value);
+let category=document.getElementById("category").value;
 
-        <label for="customerName">কাস্টমারের নাম:</label>
-        <input type="text" id="customerName" placeholder="কাস্টমারের নাম লিখুন"><br><br>
+if(category==="অন্যান্য"){
+category=document.getElementById("otherCategory").value.trim();
+if(category===""){alert("ক্যাটাগরি লিখুন");return;}
+}
 
-        <table>
-            <thead>
-                <tr>
-                    <th>ক্রমিক</th> 
-                    <th>পণ্য নাম</th>
-                    <th>পরিমাণ</th>
-                    <th>একক মূল্য</th>
-                    <th>মোট</th>
-                    <th class="no-print">অপশন</th>
-                </tr>
-            </thead>
-            <tbody id="invoiceBody"></tbody>
-        </table>
+if(desc===""||amount<=0){alert("তথ্য ঠিকভাবে দিন");return;}
 
-        <button class="no-print" onclick="addItem()">+ আইটেম যোগ করুন</button>
+transactions.push({type,desc,amount,category,date:getCurrentDate()});
+saveData();
+updateUI();
+document.getElementById("desc").value="";
+document.getElementById("amount").value="";
+document.getElementById("otherCategory").value="";
+}
 
-        <div class="total-section">
-            <div class="total-info">
-                <p><strong>মোট মূল্য:</strong> <span id="grandTotal">0 টাকা</span></p>
-                <p><strong>জমা টাকা:</strong> <input type="number" id="paidAmount" oninput="calculateDue()" placeholder="জমা টাকা লিখুন"></p>
-                <p><strong>বাকি টাকা:</strong> <span id="dueAmount">0 টাকা</span></p>
-                <p><strong>ফেরত টাকা:</strong> <span id="returnAmount">0 টাকা</span></p>
-                
-                <!-- বাকি টাকা দেওয়ার তারিখ অপশন -->
-                <div id="dueDateContainer" style="display: none; margin-top: 10px;">
-                    <label for="dueDate"><strong>বাকি টাকা দেওয়ার তারিখ:</strong></label>
-                    <input type="date" id="dueDate">
-                </div>
-            </div>
-        </div>
+async function downloadPDF(){
 
-        <h3 id="paymentStatus" style="color: green; display: none;">✅ পরিশোধিত</h3>
+let selectedMonth=document.getElementById("monthFilter").value;
 
-        <div class="signature-section">
-            <div class="signature-box">
-                <p>কাস্টমারের স্বাক্ষর:</p>
-                <div class="signature-line"></div>
-            </div>
-            <div class="signature-box">
-                <p>বিক্রেতার স্বাক্ষর:</p>
-                <div class="signature-line"></div>
-            </div>
-        </div>
+if(selectedMonth==="all"){
+alert("নির্দিষ্ট মাস সিলেক্ট করুন");
+return;
+}
 
-        <button class="no-print" onclick="printInvoice()">🖨️ প্রিন্ট করুন</button>
-    </div>
+let filtered=transactions.filter(t=>t.date.slice(0,7)===selectedMonth);
 
-    <script src="script.js"></script>
-</body>
-</html>
+if(filtered.length===0){
+alert("এই মাসে কোন ডাটা নেই");
+return;
+}
+
+const { jsPDF } = window.jspdf;
+let doc=new jsPDF();
+let y=10;
+
+doc.text("Monthly Report - "+selectedMonth,10,y);
+y+=10;
+
+filtered.forEach(t=>{
+doc.text(
+new Date(t.date).toLocaleDateString("bn-BD")+
+" | "+t.type+
+" | "+t.category+
+" | "+t.amount+" টাকা",
+10,
+y
+);
+y+=8;
+});
+
+// 🔥 এই অংশটাই নতুন (Force Download Fix)
+
+let blob = doc.output("blob");
+let url = URL.createObjectURL(blob);
+
+let a = document.createElement("a");
+a.href = url;
+a.download = selectedMonth + "-report.pdf";
+document.body.appendChild(a);
+a.click();
+
+document.body.removeChild(a);
+URL.revokeObjectURL(url);
+}
+/* বাকি সব আগের মতোই আছে */
+
+function loadMonths(){
+let select=document.getElementById("monthFilter");
+let months=[...new Set(transactions.map(t=>t.date.slice(0,7)))];
+let current=select.value;
+select.innerHTML='<option value="all">সব মাস</option>';
+months.forEach(m=>{
+let option=document.createElement("option");
+option.value=m;
+option.text=m;
+select.appendChild(option);
+});
+select.value=current;
+}
+
+function updateUI(){
+let balance=0,totalIncome=0,totalExpense=0;
+let monthlyIncome=0,monthlyExpense=0;
+
+let list=document.getElementById("list");
+let search=document.getElementById("search").value.toLowerCase();
+let selectedMonth=document.getElementById("monthFilter").value;
+
+list.innerHTML="";
+
+transactions.forEach((item,index)=>{
+let itemMonth=item.date.slice(0,7);
+if(selectedMonth!=="all" && itemMonth!==selectedMonth) return;
+if(!item.desc.toLowerCase().includes(search)) return;
+
+let div=document.createElement("div");
+
+if(item.type==="income"){
+balance+=item.amount;
+totalIncome+=item.amount;
+monthlyIncome+=item.amount;
+div.className="item green";
+}else{
+balance-=item.amount;
+totalExpense+=item.amount;
+monthlyExpense+=item.amount;
+div.className="item red";
+}
+
+div.innerHTML=`
+
+<div>      
+${item.type==="income"?"💰":"🛒"} ${item.desc}      
+<br><small>${item.category}</small>      
+<div class="smallDate">${new Date(item.date).toLocaleDateString("bn-BD")}</div>      
+</div>      
+<div>      
+<span>${item.type==="income"?"+":"-"} ${formatMoney(item.amount)}</span>      
+<div class="actionBtns">      
+<button class="editBtn" onclick="editItem(${index})">✏</button>      
+<button class="deleteBtn" onclick="deleteItem(${index})">✖</button>      
+</div>      
+</div>      
+`;      
+list.appendChild(div);      
+});    document.getElementById("balance").innerText=formatMoney(balance)+" টাকা";  
+document.getElementById("totalIncome").innerText=formatMoney(totalIncome)+" টাকা";  
+document.getElementById("totalExpense").innerText=formatMoney(totalExpense)+" টাকা";  
+document.getElementById("monthlyIncome").innerText=formatMoney(monthlyIncome)+" টাকা";  
+document.getElementById("monthlyExpense").innerText=formatMoney(monthlyExpense)+" টাকা";  
+document.getElementById("monthlyBalance").innerText=formatMoney(monthlyIncome-monthlyExpense)+" টাকা";  updateChart(totalIncome,totalExpense);
+loadMonths();
+}
+
+function updateChart(income,expense){
+let ctx=document.getElementById("expenseChart").getContext("2d");
+if(myChart){myChart.destroy();}
+myChart=new Chart(ctx,{
+type:"pie",
+data:{
+labels:["মোট আয়","মোট খরচ"],
+datasets:[{data:[income,expense],backgroundColor:["#11998e","#ff416c"]}]
+},
+options:{responsive:true}
+});
+}
+
+function editItem(index){
+let item=transactions[index];
+document.getElementById("desc").value=item.desc;
+document.getElementById("amount").value=item.amount;
+document.getElementById("category").value=item.category;
+transactions.splice(index,1);
+saveData();
+updateUI();
+}
+
+function deleteItem(index){
+transactions.splice(index,1);
+saveData();
+updateUI();
+}
+
+function resetAll(){
+if(confirm("সব হিসাব মুছবেন?")){
+transactions=[];
+saveData();
+updateUI();
+}
+}
+
+function toggleDarkMode(){document.body.classList.toggle("dark");}
+
+function checkPassword(){
+let saved=localStorage.getItem(PASS_KEY);
+let input=document.getElementById("lockPass").value;
+if(!saved){
+localStorage.setItem(PASS_KEY,input);
+alert("পাসওয়ার্ড সেট হয়েছে");
+sessionStorage.setItem(SESSION_KEY,"true");
+document.getElementById("lockScreen").style.display="none";
+}else{
+if(input===saved){
+sessionStorage.setItem(SESSION_KEY,"true");
+document.getElementById("lockScreen").style.display="none";
+}else{alert("ভুল পাসওয়ার্ড");}
+}
+}
+
+function initLock(){
+let unlocked=sessionStorage.getItem(SESSION_KEY);
+if(unlocked==="true"){
+document.getElementById("lockScreen").style.display="none";
+}else{
+document.getElementById("lockScreen").style.display="flex";
+if(!localStorage.getItem(PASS_KEY)){
+alert("প্রথমবার ব্যবহার — পাসওয়ার্ড সেট করুন");
+}
+}
+}
+
+initLock();
+updateUI();
+</script>  </body>
+
+</html>  
